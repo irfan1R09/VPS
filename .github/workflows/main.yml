@@ -11,13 +11,6 @@ jobs:
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
           
-      - name: Create User Account
-        run: |
-          $Password = ConvertTo-SecureString "P@ssw0rd123!" -AsPlainText -Force
-          New-LocalUser -Name "runneradmin" -Password $Password -Description "RDP User"
-          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin"
-          Add-LocalGroupMember -Group "Administrators" -Member "runneradmin"
-
       - name: Setup Cloudflare Tunnel
         run: |
           curl -L --output cloudflared.exe https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe
