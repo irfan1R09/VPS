@@ -5,11 +5,6 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Extracting
-        run: |
-          Expand-Archive -Path "C:\Program Files\7-Zip\7z.exe" -DestinationPath . -Force
-          # Langkah ini biasanya untuk ekstraksi file jika Anda mengupload file zip ke repo
-          
       - name: Enable Remote Desktop
         run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
