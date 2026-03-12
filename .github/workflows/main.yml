@@ -11,12 +11,19 @@ jobs:
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
           
-      - name: Create User Account
+      - name: Create or Update User Account
         run: |
           $Password = ConvertTo-SecureString "P@ssw0rd123!" -AsPlainText -Force
-          New-LocalUser -Name "runneradmin" -Password $Password -Description "RDP User"
-          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin"
-          Add-LocalGroupMember -Group "Administrators" -Member "runneradmin"
+          if (Get-LocalUser -Name "runneradmin" -ErrorAction SilentlyContinue) {
+              # Jika user sudah ada, kita cukup update password-nya
+              Set-LocalUser -Name "runneradmin" -Password $Password
+          } else {
+              # Jika belum ada, baru kita buat baru
+              New-LocalUser -Name "runneradmin" -Password $Password -Description "RDP User"
+          }
+          # Pastikan user masuk ke group Remote Desktop & Admin (abaikan jika sudah ada di group)
+          Add-LocalGroupMember -Group "Remote Desktop Users" -Member "runneradmin" -ErrorAction SilentlyContinue
+          Add-LocalGroupMember -Group "Administrators" -Member "runneradmin" -ErrorAction SilentlyContinue
 
       - name: Setup Cloudflare Tunnel
         run: |
