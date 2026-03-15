@@ -1,0 +1,40 @@
+name: GitHub-VPS-SSH
+
+on: 
+  workflow_dispatch: # Memungkinkan Anda menjalankan VPS secara manual
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Menyiapkan Lingkungan
+        uses: actions/checkout@v3
+
+      - name: Install SSH dan Ngrok
+        run: |
+          sudo apt update
+          sudo apt install openssh-server -y
+          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list
+          sudo apt update && sudo apt install ngrok -y
+
+      - name: Konfigurasi Ngrok & SSH
+        run: |
+          ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+          sudo useradd -m vpsuser
+          sudo adduser vpsuser sudo
+          echo 'vpsuser:password123' | sudo chpasswd
+          sudo service ssh start
+
+      - name: Menjalankan Tunnel SSH
+        run: |
+          # Membuka tunnel SSH di port 22
+          ngrok tcp 22 --log=stdout > /dev/null &
+          sleep 10
+          curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
+          
+      - name: Menjaga VPS Tetap Hidup
+        run: |
+          echo "VPS Berhasil Online! Gunakan alamat di atas untuk login."
+          # Loop ini menjaga agar job tidak langsung selesai
+          sleep 21600
